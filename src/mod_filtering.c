@@ -24,6 +24,7 @@
 #include <libavfilter/buffersrc.h>
 #include <libavformat/avformat.h>
 #include <libavutil/avstring.h>
+#include <libavutil/channel_layout.h>
 #include <libavutil/frame.h>
 #include <libavutil/opt.h>
 #include <libavutil/pixdesc.h>
@@ -55,7 +56,13 @@ struct filtering_ctx {
     AVRational st_timebase;
 
     AVFilterGraph *filter_graph;
+
     enum AVPixelFormat last_frame_format;
+    int last_frame_width;
+    int last_frame_height;
+    AVChannelLayout last_frame_channel_layout;
+    int last_frame_sample_rate;
+
     AVFilterContext *buffersink_ctx;        // sink of the graph (from where we pull)
     AVFilterContext *buffersrc_ctx;         // source of the graph (where we push)
     float *window_func_lut;                 // audio window function lookup table
@@ -557,6 +564,10 @@ void nmdi_filtering_run(struct filtering_ctx *ctx)
 
     // we want to force the reconstruction of the filtergraph
     ctx->last_frame_format = AV_PIX_FMT_NONE;
+    ctx->last_frame_width = 0;
+    ctx->last_frame_height = 0;
+    ctx->last_frame_sample_rate = 0;
+    ctx->last_frame_channel_layout = (AVChannelLayout){0};
 
     for (;;) {
         AVFrame *frame;
@@ -591,10 +602,18 @@ void nmdi_filtering_run(struct filtering_ctx *ctx)
                                                               : av_get_sample_fmt_name(frame->format),
               av_ts2timestr(frame->pts, &ctx->st_timebase));
 
-        /* lazy filtergraph configuration */
-        // XXX: check width/height/samplerate/etc changes?
-        if (ctx->last_frame_format != frame->format) {
+        /* lazy filtergraph configuration, see AVBufferSrcParameters for exhaustive list */
+        if (ctx->last_frame_format != frame->format ||
+            ctx->last_frame_width != frame->width ||
+            ctx->last_frame_height != frame->height ||
+            ctx->last_frame_sample_rate != frame->sample_rate ||
+            av_channel_layout_compare(&ctx->last_frame_channel_layout, &frame->ch_layout)) {
             ctx->last_frame_format = frame->format;
+            ctx->last_frame_width = frame->width;
+            ctx->last_frame_height = frame->height;
+            ctx->last_frame_sample_rate = frame->sample_rate;
+            av_channel_layout_copy(&ctx->last_frame_channel_layout, &frame->ch_layout);
+
             ret = setup_filtergraph(ctx);
             if (ret < 0)
                 break;
