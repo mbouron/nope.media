@@ -201,8 +201,11 @@ static int push_async_frame(struct decoder_ctx *dec_ctx,
     const AVCodecContext *avctx = dec_ctx->avctx;
     const struct vtdec_context *vt = dec_ctx->priv_data;
     AVFrame *frame = av_frame_alloc();
-    if (!frame)
+    if (!frame) {
+        CVPixelBufferRelease(async_frame->cv_buffer);
+        bufcounter_update(-1);
         return AVERROR(ENOMEM);
+    }
 
     frame->width   = vt->out_w;
     frame->height  = vt->out_h;
@@ -219,7 +222,11 @@ static int push_async_frame(struct decoder_ctx *dec_ctx,
                                       NULL,
                                       AV_BUFFER_FLAG_READONLY);
     if (!frame->buf[0]) {
+        /* buf[0] is not set yet, so av_frame_free() won't release the buffer:
+         * release it explicitly to honor the ownership contract. */
         av_frame_free(&frame);
+        CVPixelBufferRelease(async_frame->cv_buffer);
+        bufcounter_update(-1);
         return AVERROR(ENOMEM);
     }
     TRACE(dec_ctx, "push frame pts=%"PRId64, frame->pts);
@@ -645,8 +652,12 @@ static inline void process_queued_frames(struct decoder_ctx *dec_ctx, int push)
     while (vt->queue != NULL) {
         struct async_frame *top_frame = vt->queue;
         vt->queue = top_frame->next_frame;
-        if (push)
+        if (push) {
             push_async_frame(dec_ctx, top_frame);
+        } else {
+            CVPixelBufferRelease(top_frame->cv_buffer);
+            bufcounter_update(-1);
+        }
         av_freep(&top_frame);
     }
     vt->nb_frames = 0;
