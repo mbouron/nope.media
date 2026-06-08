@@ -39,7 +39,7 @@ int main(int ac, char **av)
 
     printf("run #1 (avselect=%d end_time=%f)\n", avselect, end_time);
     for (;;) {
-        int ret = nmd_get_next_frame(s, &frame);
+        ret = nmd_get_next_frame(s, &frame);
         if (ret != NMD_RET_NEWFRAME) {
             break;
         }

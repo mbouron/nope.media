@@ -29,8 +29,8 @@ int main(int ac, char **av)
         for (;;) {
             struct nmd_frame *frame;
 
-            int ret = nmd_get_next_frame(s, &frame);
-            if (ret != NMD_RET_NEWFRAME) {
+            const int frame_ret = nmd_get_next_frame(s, &frame);
+            if (frame_ret != NMD_RET_NEWFRAME) {
                 printf("null frame\n");
                 break;
             }

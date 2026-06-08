@@ -258,7 +258,6 @@ static int setup_filtergraph(struct filtering_ctx *ctx)
     /* define the output of the graph */
     snprintf(args, sizeof(args), "sws_flags=+full_chroma_int;%s", ctx->filters ? ctx->filters : "");
     if (codecpar->codec_type == AVMEDIA_TYPE_VIDEO) {
-        const AVPixFmtDescriptor *desc = av_pix_fmt_desc_get(ctx->frame_info.format);
         enum AVPixelFormat sw_pix_fmt = nmdi_pix_fmts_nmd2ff(ctx->sw_pix_fmt);
         if (ctx->sw_pix_fmt == NMD_PIXFMT_AUTO) {
             const enum nmd_pixel_format fmt = nmdi_pix_fmts_ff2nmd(ctx->frame_info.format);

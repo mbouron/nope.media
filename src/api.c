@@ -230,7 +230,7 @@ struct nmd_ctx *nmd_create(const char *filename)
     for (size_t i = 0; i < FF_ARRAY_ELEMS(fflibs); i++) {
         const unsigned bversion = fflibs[i].build_version;
         const unsigned rversion = fflibs[i].runtime_version;
-        LOG(s, INFO, "lib%-12s build:%3d.%3d.%3d runtime:%3d.%3d.%3d",
+        LOG(s, INFO, "lib%-12s build:%3u.%3u.%3u runtime:%3u.%3u.%3u",
             fflibs[i].libname, VFMT(bversion), VFMT(rversion));
         if (bversion != rversion)
             LOG(s, WARNING, "/!\\ build and runtime version of FFmpeg mismatch /!\\");
@@ -781,10 +781,10 @@ int nmd_get_frame_ms(struct nmd_ctx *s, int64_t t64, struct nmd_frame **framep)
         }
 
         TRACE(s, "no frame ever pushed yet, pop a candidate");
-        int ret = pop_frame(s, &candidate);
-        if (!candidate || ret < 0) {
+        const int pop_ret = pop_frame(s, &candidate);
+        if (!candidate || pop_ret < 0) {
             TRACE(s, "can not get a single frame for this media");
-            return ret_frame(s, NULL, ret, framep);
+            return ret_frame(s, NULL, pop_ret, framep);
         }
 
         /* At this point we can assume the stream timebase is known because
@@ -807,7 +807,7 @@ int nmd_get_frame_ms(struct nmd_ctx *s, int64_t t64, struct nmd_frame **framep)
              * candidate if the first time requested is not actually 0 */
             if (t64 == 0)
                 s->first_ts = candidate->pts;
-            return ret_frame(s, candidate, ret, framep);
+            return ret_frame(s, candidate, pop_ret, framep);
         }
 
     } else {
@@ -866,9 +866,9 @@ int nmd_get_frame_ms(struct nmd_ctx *s, int64_t t64, struct nmd_frame **framep)
 
         TRACE(s, "grab another frame");
         AVFrame *next = NULL;
-        int ret = pop_frame(s, &next);
+        const int pop_ret = pop_frame(s, &next);
         av_assert0(!s->cached_frame);
-        if (!next || ret < 0) {
+        if (!next || pop_ret < 0) {
             TRACE(s, "no more frame");
             break;
         }

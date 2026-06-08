@@ -32,7 +32,7 @@ extern const struct decoder nmdi_decoder_ffmpeg_sw;
 extern const struct decoder nmdi_decoder_ffmpeg_hw;
 static const struct decoder *decoder_def_software = &nmdi_decoder_ffmpeg_sw;
 
-#if __APPLE__
+#if defined(__APPLE__)
 extern const struct decoder nmdi_decoder_vt;
 static const struct decoder *decoder_def_hwaccel = &nmdi_decoder_vt;
 #else
