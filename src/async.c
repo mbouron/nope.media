@@ -211,7 +211,7 @@ int nmdi_async_pop_frame(struct async_context *actx, AVFrame **framep)
 
 static int create_seek_msg(struct message *msg, int64_t ts)
 {
-    msg->type = MSG_SEEK,
+    msg->type = MSG_SEEK;
     msg->data = av_malloc(sizeof(ts));
     if (!msg->data)
         return AVERROR(ENOMEM);
