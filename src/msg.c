@@ -35,10 +35,12 @@ void nmdi_msg_free_data(void *arg)
         msg->data = NULL;
         break;
     }
-    case MSG_PACKET:
-        av_packet_unref(msg->data);
-        av_freep(&msg->data);
+    case MSG_PACKET: {
+        AVPacket *pkt = msg->data;
+        av_packet_free(&pkt);
+        msg->data = NULL;
         break;
+    }
     case MSG_SEEK:
     case MSG_INFO:
         av_freep(&msg->data);

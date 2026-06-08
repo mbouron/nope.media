@@ -289,8 +289,7 @@ void nmdi_decoding_run(struct decoding_ctx *ctx)
         pkt = msg.data;
         TRACE(ctx, "got a packet of size %d, push it to decoder", pkt->size);
         ret = nmdi_decoder_push_packet(ctx->decoder, pkt);
-        av_packet_unref(pkt);
-        av_freep(&pkt);
+        av_packet_free(&pkt);
         if (ret < 0)
             break;
     }

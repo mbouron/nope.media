@@ -207,7 +207,6 @@ void nmdi_demuxing_run(struct demuxing_ctx *ctx)
     TRACE(ctx, "demuxing packets in queue %p", ctx->pkt_queue);
 
     for (;;) {
-        AVPacket pkt;
         struct message msg;
 
         ret = av_thread_message_queue_recv(ctx->src_queue, &msg, AV_THREAD_MESSAGE_NONBLOCK);
@@ -240,26 +239,28 @@ void nmdi_demuxing_run(struct demuxing_ctx *ctx)
             }
         }
 
-        msg.type = MSG_PACKET;
-
-        ret = pull_packet(ctx, &pkt);
-        if (ret < 0)
-            break;
-
-        TRACE(ctx, "pulled a packet of size %d, sending to decoder", pkt.size);
-
-        msg.data = av_memdup(&pkt, sizeof(pkt));
-        if (!msg.data) {
-            av_packet_unref(&pkt);
+        AVPacket *pkt = av_packet_alloc();
+        if (!pkt) {
+            ret = AVERROR(ENOMEM);
             break;
         }
+
+        ret = pull_packet(ctx, pkt);
+        if (ret < 0) {
+            av_packet_free(&pkt);
+            break;
+        }
+
+        TRACE(ctx, "pulled a packet of size %d, sending to decoder", pkt->size);
+
+        msg.type = MSG_PACKET;
+        msg.data = pkt;
 
         ret = av_thread_message_queue_send(ctx->pkt_queue, &msg, 0);
         TRACE(ctx, "sent packet to decoder, ret=%s", av_err2str(ret));
 
         if (ret < 0) {
-            av_packet_unref(&pkt);
-            av_freep(&msg.data);
+            nmdi_msg_free_data(&msg);
             if (ret != AVERROR_EOF && ret != AVERROR_EXIT)
                 LOG(ctx, ERROR, "Unable to send packet to decoder: %s", av_err2str(ret));
             TRACE(ctx, "can't send pkt to decoder: %s", av_err2str(ret));
