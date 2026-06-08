@@ -703,19 +703,19 @@ static void vtdec_uninit(struct decoder_ctx *dec_ctx)
 
     TRACE(dec_ctx, "uninit");
 
-    pthread_mutex_destroy(&vt->lock);
-    pthread_cond_destroy(&vt->cond);
-
-    if (vt->cm_fmt_desc)
-        CFRelease(vt->cm_fmt_desc);
-
-    drop_queued_frames(dec_ctx);
-
     if (vt->session) {
         VTDecompressionSessionInvalidate(vt->session);
         CFRelease(vt->session);
         vt->session = NULL;
     }
+
+    drop_queued_frames(dec_ctx);
+
+    pthread_mutex_destroy(&vt->lock);
+    pthread_cond_destroy(&vt->cond);
+
+    if (vt->cm_fmt_desc)
+        CFRelease(vt->cm_fmt_desc);
 
     deccounter_update(-1);
 }
