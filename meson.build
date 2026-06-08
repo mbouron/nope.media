@@ -29,7 +29,19 @@ trim_prefix = run_command([
 
 add_project_arguments(
   cc.get_supported_arguments([
+    '-Wshadow',
     '-Werror=missing-prototypes',
+    '-Werror=pointer-arith',
+    '-Werror=vla',
+    '-Wformat=2',
+    '-Wformat-signedness',
+    '-Wignored-qualifiers',
+    '-Wimplicit-fallthrough',
+    '-Wlogical-op',
+    '-Wundef',
+    '-fno-math-errno',
+    '-Wcast-function-type',
+    '-Wcast-function-type-strict',
     '-fmacro-prefix-map=@0@/='.format(trim_prefix),
   ]),
   language: 'c',

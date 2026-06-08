@@ -344,11 +344,12 @@ static void *name##_thread(void *arg)                                           
             }                                                                   \
             attrp = &attr;                                                      \
         }                                                                       \
-        int ret = pthread_create(&actx->name##_tid, attrp, name##_thread, actx);\
+        int pthread_ret = pthread_create(&actx->name##_tid, attrp,              \
+                                         name##_thread, actx);                  \
         if (attrp)                                                              \
             pthread_attr_destroy(attrp);                                        \
-        if (ret) {                                                              \
-            const int err = AVERROR(ret);                                       \
+        if (pthread_ret) {                                                      \
+            const int err = AVERROR(pthread_ret);                               \
             LOG(actx, ERROR, "Unable to start " AV_STRINGIFY(name)              \
                 " thread: %s", av_err2str(err));                                \
         } else                                                                  \
@@ -409,7 +410,7 @@ static int op_start(struct async_context *actx)
     if (seek_to != AV_NOPTS_VALUE) {
         TRACE(actx, "seek to: %s", PTS2TIMESTR(seek_to));
 
-        int ret = create_seek_msg(&msg, seek_to);
+        ret = create_seek_msg(&msg, seek_to);
         if (ret < 0)
             return ret;
 
