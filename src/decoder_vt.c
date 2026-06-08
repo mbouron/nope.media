@@ -262,6 +262,8 @@ static void decode_callback(void *opaque,
     }
 
     new_frame = av_mallocz(sizeof(struct async_frame));
+    av_assert0(new_frame);
+
     new_frame->next_frame = NULL;
     new_frame->cv_buffer = CVPixelBufferRetain(image_buffer);
     new_frame->pts = pts.value;
