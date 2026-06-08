@@ -516,7 +516,7 @@ static int ret_frame(struct nmd_ctx *s, AVFrame *avframe, int status, struct nmd
     memcpy(frame->datap, avframe->data, sizeof(frame->datap));
     memcpy(frame->linesizep, avframe->linesize, sizeof(frame->linesizep));
     frame->pts      = frame_ts;
-    frame->ms       = av_rescale_q(frame_ts, AV_TIME_BASE_Q, s->st_timebase);
+    frame->ms       = av_rescale_q(frame_ts, s->st_timebase, AV_TIME_BASE_Q);
     frame->ts       = frame_ts * av_q2d(s->st_timebase);
     frame->color_space     = get_nmd_col_spc(avframe->colorspace);
     frame->color_range     = get_nmd_col_rng(avframe->color_range);
